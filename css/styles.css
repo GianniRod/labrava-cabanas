@@ -304,6 +304,7 @@ p { margin: 0 0 1em; }
 }
 
 .gallery { position: relative; background: #111; aspect-ratio: 16/9; }
+@media (min-width: 821px) { .gallery { aspect-ratio: auto; height: min(42vh, 400px); } }
 .gallery__img { width: 100%; height: 100%; object-fit: cover; }
 .gallery__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.9); cursor: pointer; display: grid; place-items: center; }
 .gallery__nav--prev { left: 14px; }
