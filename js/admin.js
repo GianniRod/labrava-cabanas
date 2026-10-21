@@ -1,4 +1,4 @@
-﻿import { firebaseConfig, firebaseSinConfigurar, COLECCION } from "./firebase-config.js";
+import { firebaseConfig, firebaseSinConfigurar, COLECCION } from "./firebase-config.js";
 import { esc, formatoPrecio, COMODIDADES, ESTADOS } from "./shared.js";
 
 const FB = "https://www.gstatic.com/firebasejs/10.12.2";
@@ -9,7 +9,6 @@ const {
 const {
   getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, getDocs, getDoc, serverTimestamp
 } = await import(`${FB}/firebase-firestore.js`);
-const { getStorage, ref, uploadBytes, getDownloadURL } = await import(`${FB}/firebase-storage.js`);
 
 const $ = (s, el = document) => el.querySelector(s);
 const icon = id => `<svg class="ico"><use href="#${id}"/></svg>`;
@@ -39,8 +38,31 @@ if (firebaseSinConfigurar) {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const col = collection(db, COLECCION);
+
+// Las fotos subidas se guardan en la colección "fotos" (sin Firebase Storage)
+// y en la cabaña se referencian como "fs:<id>". Los links se guardan tal cual.
+const fotosCol = collection(db, "fotos");
+const cacheFotos = new Map();
+const esFotoFs = f => f.startsWith("fs:");
+function leerFoto(f) {
+  if (!esFotoFs(f)) return Promise.resolve(f);
+  if (!cacheFotos.has(f)) {
+    cacheFotos.set(f, getDoc(doc(fotosCol, f.slice(3))).then(s => s.data()?.data || "").catch(() => ""));
+  }
+  return cacheFotos.get(f);
+}
+// Completa el src de las <img data-foto> dentro de el
+function hidratarFotos(el) {
+  el.querySelectorAll("img[data-foto]").forEach(async img => {
+    const src = await leerFoto(img.dataset.foto);
+    if (src) img.src = src;
+  });
+}
+const borrarFotos = refs => refs.filter(esFotoFs).forEach(f => {
+  cacheFotos.delete(f);
+  deleteDoc(doc(fotosCol, f.slice(3))).catch(console.error);
+});
 
 // ============================================================
 //  LOGIN
@@ -160,7 +182,7 @@ function renderLista() {
     ].filter(Boolean);
     return `
     <div class="row-item">
-      ${c.fotos?.[0] ? `<img class="row-item__img" src="${esc(c.fotos[0])}" alt="">` : `<div class="row-item__img"></div>`}
+      ${c.fotos?.[0] ? `<img class="row-item__img" data-foto="${esc(c.fotos[0])}" alt="">` : `<div class="row-item__img"></div>`}
       <div class="row-item__main">
         <h3>${esc(c.nombre)}${c.destacada ? `<span class="tag">Destacada</span>` : ""}${c.publicada ? "" : `<span class="tag tag--off">Oculta</span>`}</h3>
         <div class="row-item__meta"><span class="row-item__price">${esc(precioTexto(c))}</span>${meta.map(m => `<span>${esc(m)}</span>`).join("")}</div>
@@ -179,6 +201,7 @@ function renderLista() {
       </div>
     </div>`;
   }).join("") : `<p class="loading">No hay cabañas que coincidan con la búsqueda.</p>`;
+  hidratarFotos($("#list"));
 }
 
 $("#search").addEventListener("input", renderLista);
@@ -210,6 +233,7 @@ $("#list").addEventListener("click", async e => {
     if (!confirm(`¿Eliminar "${c?.nombre}"? Esta acción no se puede deshacer.`)) return;
     try {
       await deleteDoc(doc(db, COLECCION, del.dataset.del));
+      borrarFotos(c?.fotos || []);
       toast("Cabaña eliminada.");
     } catch (err) {
       console.error(err);
@@ -228,6 +252,7 @@ const drawer = $("#drawer");
 const form = $("#form");
 let editId = null;
 let fotos = [];
+let fotosOriginales = [];
 let comodidadesExtra = [];
 let subiendo = 0;
 
@@ -257,6 +282,7 @@ function abrirEditor(c) {
   $("#destacada").checked = !!c?.destacada;
 
   fotos = [...(c?.fotos || [])];
+  fotosOriginales = [...fotos];
   const actuales = c?.comodidades || [];
   comodidadesExtra = actuales.filter(x => !COMODIDADES.includes(x));
   renderComodidades(actuales);
@@ -272,6 +298,8 @@ function abrirEditor(c) {
 
 function cerrarEditor() {
   if (subiendo && !confirm("Hay fotos subiéndose. ¿Cerrar igual?")) return;
+  // Sin guardar: descartar las fotos subidas en esta edición
+  borrarFotos(fotos.filter(f => !fotosOriginales.includes(f)));
   drawer.hidden = true;
   document.body.style.overflow = "";
 }
@@ -324,7 +352,7 @@ $("#comodidadExtra").addEventListener("keydown", e => { if (e.key === "Enter") {
 function renderFotos() {
   $("#photos").innerHTML = fotos.map((f, i) => `
     <div class="photo">
-      <img src="${esc(f)}" alt="Foto ${i + 1}" loading="lazy">
+      <img data-foto="${esc(f)}" alt="Foto ${i + 1}">
       ${i === 0 ? `<span class="photo__cover">Portada</span>` : ""}
       <div class="photo__tools">
         <span>
@@ -334,6 +362,7 @@ function renderFotos() {
         <button type="button" data-del="${i}" aria-label="Quitar foto">${icon("i-trash")}</button>
       </div>
     </div>`).join("");
+  hidratarFotos($("#photos"));
 }
 
 $("#photos").addEventListener("click", e => {
@@ -357,19 +386,19 @@ function agregarUrl() {
 $("#addUrlBtn").addEventListener("click", agregarUrl);
 $("#fotoUrl").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); agregarUrl(); } });
 
-// Redimensiona a máx. 1600px y comprime a JPEG para que la web cargue rápido
-async function comprimir(file, max = 1600, calidad = 0.82) {
-  try {
-    const bmp = await createImageBitmap(file);
+// Redimensiona y comprime a JPEG hasta que entre en un documento de Firestore (límite 1 MB)
+async function comprimir(file) {
+  const bmp = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  for (const [max, calidad] of [[1600, 0.8], [1280, 0.72], [1024, 0.65], [800, 0.6]]) {
     const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
-    const canvas = document.createElement("canvas");
     canvas.width = Math.round(bmp.width * k);
     canvas.height = Math.round(bmp.height * k);
     canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
-    return await new Promise(r => canvas.toBlob(r, "image/jpeg", calidad));
-  } catch {
-    return file;
+    const url = canvas.toDataURL("image/jpeg", calidad);
+    if (url.length < 900_000) return url;
   }
+  throw new Error("La foto es demasiado pesada");
 }
 
 $("#fileInput").addEventListener("change", async e => {
@@ -383,16 +412,18 @@ $("#fileInput").addEventListener("change", async e => {
   for (const file of files) {
     status.textContent = `Subiendo fotos… (${ok + 1} de ${files.length})`;
     try {
-      const blob = await comprimir(file);
-      const nombre = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-      const r = ref(storage, `${COLECCION}/${nombre}`);
-      await uploadBytes(r, blob, { contentType: blob.type || "image/jpeg" });
-      fotos.push(await getDownloadURL(r));
+      const data = await comprimir(file);
+      const r = await addDoc(fotosCol, { data, creado: serverTimestamp() });
+      const f = "fs:" + r.id;
+      cacheFotos.set(f, Promise.resolve(data));
+      fotos.push(f);
       ok++;
       renderFotos();
     } catch (err) {
       console.error(err);
-      toast("No se pudo subir una foto. Verificá que Firebase Storage esté activado (ver README) o pegá el link de la imagen.", true);
+      toast(err.code === "permission-denied"
+        ? "No se pudo subir la foto: falta actualizar las reglas de Firestore (ver README)."
+        : "No se pudo subir una foto. Probá con otra imagen o pegá el link.", true);
     } finally {
       subiendo--;
     }
@@ -438,6 +469,7 @@ form.addEventListener("submit", async e => {
       data.creado = serverTimestamp();
       await addDoc(col, data);
     }
+    borrarFotos(fotosOriginales.filter(f => !fotos.includes(f)));
     drawer.hidden = true;
     document.body.style.overflow = "";
     toast(editId ? "Cambios guardados." : "Cabaña creada.");
