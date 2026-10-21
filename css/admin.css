@@ -27,7 +27,6 @@ body.admin { background: #f3f1ec; }
 .field__user input { border-radius: var(--radius-sm) 0 0 var(--radius-sm); border-right: 0; }
 .field__domain { font-size: .9rem; font-weight: 500; color: var(--muted); background: #ebe6dc; padding: .7em .85em; border: 1px solid #d8d2c6; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; white-space: nowrap; }
 .form-error { color: #a33a1f; background: #fdecea; border-radius: 8px; padding: 10px 12px; font-size: .88rem; margin: 0 0 14px; }
-.link-btn { background: none; border: 0; color: var(--laguna); font: inherit; font-size: .88rem; cursor: pointer; margin-top: 14px; text-decoration: underline; text-underline-offset: 3px; }
 .hint { font-size: .84rem; color: var(--muted); margin: 0 0 12px; }
 
 /* Que el atributo hidden siempre gane sobre display: grid/flex */
@@ -41,9 +40,7 @@ body.admin { background: #f3f1ec; }
 .login__card { width: 100%; max-width: 420px; background: var(--crema); border-radius: 20px; padding: 36px 32px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
 .login__card h1 { font-size: 1.9rem; margin: 28px 0 4px; }
 .login__sub { color: var(--muted); margin-bottom: 24px; }
-.login__back { margin-top: 22px; font-size: .85rem; color: var(--muted); text-decoration: none; text-align: center; }
-.login .link-btn { align-self: center; }
-@media (max-width: 480px) { .login__card { padding: 28px 20px; } }
+.login__back { margin-top: 22px; font-size: .85rem; color: var(--muted); text-decoration: none; text-align: center; }@media (max-width: 480px) { .login__card { padding: 28px 20px; } }
 
 /* ---------- Topbar ---------- */
 .topbar { background: #fff; border-bottom: 1px solid var(--linea); position: sticky; top: 0; z-index: 20; }
@@ -162,20 +159,3 @@ body.admin { background: #f3f1ec; }
 .toast--error { background: #a33a1f; }
 
 .loading { text-align: center; padding: 40px; color: var(--muted); }
-
-/* ---------- Tabs ---------- */
-.tabs { display: flex; gap: 4px; background: #ebe6dc; border-radius: 12px; padding: 4px; margin-bottom: 28px; }
-.tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-size: .92rem; font-weight: 600; color: var(--muted); background: none; border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; transition: background .15s, color .15s; }
-.tab:hover { color: var(--tinta); }
-.tab--active { background: #fff; color: var(--bosque); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-.tab .ico { width: 18px; height: 18px; }
-
-/* ---------- Usuarios ---------- */
-.user-add-card { background: #fff; border: 1px solid var(--linea); border-radius: 14px; padding: 20px 22px 8px; margin-bottom: 18px; }
-.user-add-card h3 { font-size: 1.1rem; margin: 0 0 14px; color: var(--bosque); }
-.user-add-card .row { align-items: flex-end; }
-.user-item { background: #fff; border: 1px solid var(--linea); border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.user-item__info { display: flex; flex-direction: column; min-width: 0; }
-.user-item__name { font-weight: 600; font-size: 1rem; color: var(--tinta); }
-.user-item__email { font-size: .84rem; color: var(--muted); }
-.user-item__you { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--laguna); }
