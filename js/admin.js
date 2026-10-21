@@ -96,7 +96,7 @@ $("#loginForm").addEventListener("submit", async e => {
   btn.textContent = "Ingresando…";
   try {
     const user = $("#lEmail").value.trim();
-    const email = user.includes("@") ? user : user + "@labrava.com";
+    const email = user.includes("@") ? user : user + "@labravacabanas.com.ar";
     await signInWithEmailAndPassword(auth, email, $("#lPass").value);
   } catch (err) {
     loginError(errorAuth(err));
