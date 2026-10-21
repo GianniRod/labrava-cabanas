@@ -2,11 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Es admin si está autenticado y su correo termina en @labrava.com
+    // Es admin si está autenticado y su correo termina en @labravacabanas.com.ar
     // o si figura en la colección 'admins'.
     function esAdmin() {
       return request.auth != null
-        && (request.auth.token.email.matches('.*@labrava[.]com')
+        && (request.auth.token.email.matches('.*@labravacabanas[.]com[.]ar')
             || exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
     }
 
