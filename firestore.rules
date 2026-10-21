@@ -25,6 +25,13 @@ service cloud.firestore {
       allow delete: if esAdmin();
     }
 
+    // Fotos subidas desde el panel (guardadas como texto, sin Firebase Storage)
+    match /fotos/{id} {
+      allow read: if true;
+      allow create: if esAdmin() && request.resource.data.data is string;
+      allow delete: if esAdmin();
+    }
+
     // Todo lo demás, cerrado.
     match /{document=**} {
       allow read, write: if false;
