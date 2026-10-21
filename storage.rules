@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function esAdmin() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/admins/$(request.auth.token.email));
+    }
+
+    match /cabanas/{archivo} {
+      allow read: if true;
+      // Solo imágenes de hasta 5 MB
+      allow write: if esAdmin()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if esAdmin();
+    }
+  }
+}

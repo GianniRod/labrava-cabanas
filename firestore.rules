@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Es admin si está autenticado y su correo termina en @labrava.com
+    // o si figura en la colección 'admins'.
+    function esAdmin() {
+      return request.auth != null
+        && (request.auth.token.email.matches('.*@labrava[.]com')
+            || exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
+    }
+
+    match /admins/{email} {
+      allow read: if esAdmin();
+      allow create, delete: if esAdmin();
+      allow update: if false;
+    }
+
+    match /cabanas/{id} {
+      // El público solo ve las cabañas publicadas; el admin ve todas.
+      allow read: if resource.data.publicada == true || esAdmin();
+      allow create, update: if esAdmin()
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() > 0;
+      allow delete: if esAdmin();
+    }
+
+    // Todo lo demás, cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

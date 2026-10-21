@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel · Cabañas La Brava</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1f3a2e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f3a2e'/%3E%3Cpath d='M12 44 L32 18 L52 44 Z' fill='%23f4efe6'/%3E%3Crect x='27' y='32' width='10' height='12' fill='%23a0673a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="m20 20-4.2-4.2"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 11 12 4l8 7v9h-5v-6H9v6H4v-9Z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM20 20v-1.5a3.5 3.5 0 0 0-2.5-3.35M15.5 4.15a3.5 3.5 0 0 1 0 6.7"/></symbol>
+</svg>
+
+<!-- ============ LOGIN ============ -->
+<section class="login" id="viewLogin" hidden>
+  <form class="login__card" id="loginForm" novalidate>
+    <div class="brand brand--dark">
+      <span class="brand__mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M6 30 L20 11 L34 30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M4 34 Q12 31 20 34 T36 34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+      <span class="brand__text"><strong>La Brava</strong><small>Panel del propietario</small></span>
+    </div>
+    <h1>Iniciar sesión</h1>
+    <p class="login__sub">Ingresá para administrar tus cabañas.</p>
+    <div class="notice" id="cfgNotice" hidden>Firebase todavía no está configurado. Completá <code>js/firebase-config.js</code> con los datos de tu proyecto (ver README).</div>
+    <label class="field"><span>Usuario</span><input type="text" id="lEmail" autocomplete="username" required></label>
+    <label class="field"><span>Contraseña</span>
+      <span class="field__pw">
+        <input type="password" id="lPass" autocomplete="current-password" required>
+        <button type="button" class="field__eye" id="togglePw" aria-label="Mostrar contraseña"><svg class="ico"><use href="#i-eye"/></svg></button>
+      </span>
+    </label>
+    <p class="form-error" id="loginError" role="alert" hidden></p>
+    <button class="btn btn--dark btn--block" id="loginBtn" type="submit">Ingresar</button>
+    <button type="button" class="link-btn" id="forgotBtn">Olvidé mi contraseña</button>
+    <a href="index.html" class="login__back">← Volver al sitio</a>
+  </form>
+</section>
+
+<!-- ============ PANEL ============ -->
+<div id="viewApp" hidden>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand brand--dark">
+        <span class="brand__mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M6 30 L20 11 L34 30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M4 34 Q12 31 20 34 T36 34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span class="brand__text"><strong>La Brava</strong><small>Panel</small></span>
+      </div>
+      <div class="topbar__right">
+        <a href="index.html" target="_blank" class="btn btn--ghost btn--sm"><svg class="ico"><use href="#i-home"/></svg><span class="hide-sm">Ver sitio</span></a>
+        <span class="topbar__user hide-sm" id="userEmail"></span>
+        <button class="btn btn--ghost btn--sm" id="logoutBtn"><svg class="ico"><use href="#i-out"/></svg><span class="hide-sm">Salir</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash">
+    <!-- Tabs -->
+    <nav class="tabs" id="tabs">
+      <button class="tab tab--active" data-tab="cabanas"><svg class="ico"><use href="#i-home"/></svg> Cabañas</button>
+      <button class="tab" data-tab="usuarios"><svg class="ico"><use href="#i-users"/></svg> Usuarios</button>
+    </nav>
+
+    <!-- ====== TAB CABAÑAS ====== -->
+    <div class="tab-panel" id="panelCabanas">
+    <div class="dash__head">
+      <div>
+        <h1>Cabañas</h1>
+        <p class="muted">Administrá el stock, precios y disponibilidad que se muestran en la web.</p>
+      </div>
+      <button class="btn btn--dark" id="newBtn"><svg class="ico"><use href="#i-plus"/></svg> Nueva cabaña</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Total</span><strong id="sTotal">0</strong></div>
+      <div class="stat"><span>Publicadas</span><strong id="sPub">0</strong></div>
+      <div class="stat stat--ok"><span>Disponibles</span><strong id="sDisp">0</strong></div>
+      <div class="stat stat--warn"><span>Reservadas</span><strong id="sRes">0</strong></div>
+    </div>
+
+    <div class="toolbar">
+      <label class="search"><svg class="ico"><use href="#i-search"/></svg><input type="search" id="search" placeholder="Buscar por nombre…"></label>
+      <select id="fEstado" class="select">
+        <option value="">Todos los estados</option>
+        <option value="disponible">Disponible</option>
+        <option value="reservada">Reservada</option>
+        <option value="no-disponible">No disponible</option>
+      </select>
+    </div>
+
+    <div class="list" id="list"></div>
+    <div class="list-empty" id="listEmpty" hidden>
+      <h3>Todavía no cargaste cabañas</h3>
+      <p class="muted">Creá la primera y aparecerá automáticamente en la landing.</p>
+      <button class="btn btn--dark" data-new><svg class="ico"><use href="#i-plus"/></svg> Nueva cabaña</button>
+    </div>
+    </div><!-- /panelCabanas -->
+
+    <!-- ====== TAB USUARIOS ====== -->
+    <div class="tab-panel" id="panelUsuarios" hidden>
+      <div class="dash__head">
+        <div>
+          <h1>Usuarios</h1>
+          <p class="muted">Administrá quién puede acceder al panel. Todos los usuarios usan @labrava.com.</p>
+        </div>
+      </div>
+
+      <div class="user-add-card">
+        <h3>Agregar usuario</h3>
+        <div class="row row--3">
+          <label class="field"><span>Usuario</span><input type="text" id="nuevoUser" placeholder="nombre de usuario"></label>
+          <label class="field"><span>Contraseña</span><input type="password" id="nuevoPass" placeholder="Mínimo 6 caracteres"></label>
+          <div class="field" style="justify-content:flex-end"><button class="btn btn--dark" id="addUserBtn" type="button"><svg class="ico"><use href="#i-plus"/></svg> Crear usuario</button></div>
+        </div>
+        <p class="form-error" id="userError" role="alert" hidden></p>
+      </div>
+
+      <div class="list" id="userList"></div>
+      <div class="list-empty" id="userListEmpty" hidden>
+        <h3>No hay usuarios registrados</h3>
+        <p class="muted">Creá el primero con el formulario de arriba.</p>
+      </div>
+    </div><!-- /panelUsuarios -->
+  </main>
+</div>
+
+<!-- ============ EDITOR ============ -->
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer__backdrop" data-close></div>
+  <form class="drawer__panel" id="form" novalidate>
+    <header class="drawer__head">
+      <h2 id="formTitle">Nueva cabaña</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    </header>
+
+    <div class="drawer__body">
+      <fieldset class="fs">
+        <legend>Información básica</legend>
+        <label class="field"><span>Nombre de la cabaña *</span><input id="nombre" required maxlength="80" placeholder="Ej: Cabaña El Mirador"></label>
+        <label class="field"><span>Descripción corta <em>(se ve en la tarjeta)</em></span><input id="descripcionCorta" maxlength="140" placeholder="Ej: Vista a la laguna, parrilla y hogar a leña"></label>
+        <label class="field"><span>Descripción completa</span><textarea id="descripcion" rows="5" placeholder="Contá cómo es la cabaña, sus ambientes, la vista, qué la hace especial…"></textarea></label>
+        <label class="field"><span>Ubicación</span><input id="ubicacion" placeholder="Laguna La Brava, Balcarce"></label>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Características</legend>
+        <div class="row row--3">
+          <label class="field"><span>Huéspedes</span><input type="number" id="capacidad" min="1" max="30"></label>
+          <label class="field"><span>Dormitorios</span><input type="number" id="dormitorios" min="0" max="20"></label>
+          <label class="field"><span>Baños</span><input type="number" id="banos" min="0" max="20"></label>
+        </div>
+        <div class="row row--3">
+          <label class="field"><span>Superficie (m²)</span><input type="number" id="superficie" min="0"></label>
+          <label class="field"><span>Distancia a la laguna</span><input id="distanciaLaguna" placeholder="Ej: 200 m"></label>
+          <label class="field"><span>Camas</span><input id="camas" placeholder="Ej: 1 matrimonial, 2 simples"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Precio</legend>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="modo" value="precio" checked><span>Mostrar precio</span></label>
+          <label><input type="radio" name="modo" value="consultar"><span>Consultar precio</span></label>
+        </div>
+        <div class="row row--3" id="precioCampos">
+          <label class="field"><span>Moneda</span>
+            <select id="moneda"><option value="ARS">Pesos (ARS)</option><option value="USD">Dólares (USD)</option></select>
+          </label>
+          <label class="field"><span>Monto</span><input type="number" id="monto" min="0" step="1" placeholder="0"></label>
+          <label class="field"><span>Período</span>
+            <select id="periodo"><option value="mes">Mensual</option><option value="quincena">Quincenal</option><option value="semana">Semanal</option><option value="noche">Por noche</option></select>
+          </label>
+        </div>
+        <p class="preview">Así se verá: <strong id="precioPreview">Consultar</strong></p>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Fotos</legend>
+        <p class="hint">La primera foto es la portada. Usá las flechas para reordenar.</p>
+        <div class="photos" id="photos"></div>
+        <div class="photo-add">
+          <label class="btn btn--ghost btn--sm upload-btn">
+            <svg class="ico"><use href="#i-upload"/></svg> Subir fotos
+            <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          </label>
+          <div class="url-add">
+            <input type="url" id="fotoUrl" placeholder="…o pegá el link de una imagen (https://…)">
+            <button type="button" class="btn btn--ghost btn--sm" id="addUrlBtn">Agregar</button>
+          </div>
+        </div>
+        <p class="hint" id="uploadStatus" hidden></p>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Comodidades</legend>
+        <div class="checks" id="comodidades"></div>
+        <div class="url-add">
+          <input id="comodidadExtra" placeholder="Agregar otra comodidad…" maxlength="40">
+          <button type="button" class="btn btn--ghost btn--sm" id="addComodidadBtn">Agregar</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Normas y condiciones</legend>
+        <div class="row row--2">
+          <label class="switch"><input type="checkbox" id="mascotas"><span class="switch__track"></span><span>Acepta mascotas</span></label>
+          <label class="switch"><input type="checkbox" id="fumar"><span class="switch__track"></span><span>Se permite fumar (exterior)</span></label>
+        </div>
+        <div class="row row--3">
+          <label class="field"><span>Check-in</span><input id="checkIn" placeholder="14:00"></label>
+          <label class="field"><span>Check-out</span><input id="checkOut" placeholder="10:00"></label>
+          <label class="field"><span>Estadía mínima</span><input id="estadiaMinima" placeholder="Ej: 1 mes"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Publicación</legend>
+        <div class="row row--2">
+          <label class="field"><span>Estado</span>
+            <select id="estado"><option value="disponible">Disponible</option><option value="reservada">Reservada</option><option value="no-disponible">No disponible</option></select>
+          </label>
+          <label class="field"><span>Orden en la web <em>(menor = primero)</em></span><input type="number" id="orden" min="0" placeholder="1"></label>
+        </div>
+        <div class="row row--2">
+          <label class="switch"><input type="checkbox" id="publicada" checked><span class="switch__track"></span><span>Publicada en la web</span></label>
+          <label class="switch"><input type="checkbox" id="destacada"><span class="switch__track"></span><span>Destacada</span></label>
+        </div>
+      </fieldset>
+    </div>
+
+    <footer class="drawer__foot">
+      <p class="form-error" id="formError" role="alert" hidden></p>
+      <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
+      <button type="submit" class="btn btn--dark" id="saveBtn">Guardar cabaña</button>
+    </footer>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
