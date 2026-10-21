@@ -11,6 +11,8 @@ const modalBody = $("#modalBody");
 
 let cabanas = [];
 let galeria = { fotos: [], i: 0 };
+// Resuelve una foto a su src: las subidas desde el panel vienen como "fs:<id>" (colección "fotos")
+let leerFoto = async f => f;
 
 // ---------- Enlaces generales de WhatsApp ----------
 const msgGeneral = "¡Hola! Vi la web de las cabañas en Laguna La Brava y quería hacer una consulta.";
@@ -38,10 +40,19 @@ async function cargarCabanas() {
     return DEMO;
   }
   const { initializeApp } = await import(`${FB}/firebase-app.js`);
-  const { getFirestore, collection, query, where, getDocs } = await import(`${FB}/firebase-firestore.js`);
+  const { getFirestore, collection, query, where, getDocs, getDoc, doc } = await import(`${FB}/firebase-firestore.js`);
   const db = getFirestore(initializeApp(firebaseConfig));
+  const cache = new Map();
+  leerFoto = f => {
+    if (!f.startsWith("fs:")) return Promise.resolve(f);
+    if (!cache.has(f)) cache.set(f, getDoc(doc(db, "fotos", f.slice(3))).then(s => s.data()?.data || "").catch(() => ""));
+    return cache.get(f);
+  };
   const snap = await getDocs(query(collection(db, COLECCION), where("publicada", "==", true)));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Solo las portadas; el resto se carga al abrir cada cabaña
+  await Promise.all(lista.map(async c => { if (c.fotos?.[0]) c.fotos[0] = await leerFoto(c.fotos[0]); }));
+  return lista;
 }
 
 function ordenar(lista) {
@@ -165,9 +176,10 @@ function detalleHTML(c) {
     </div>`;
 }
 
-function abrir(id) {
+async function abrir(id) {
   const c = cabanas.find(x => x.id === id);
   if (!c) return;
+  c.fotos = (await Promise.all((c.fotos || []).map(leerFoto))).filter(Boolean);
   galeria = { fotos: c.fotos || [], i: 0 };
   modalBody.innerHTML = detalleHTML(c);
   modal.hidden = false;
