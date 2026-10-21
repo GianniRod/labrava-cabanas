@@ -4,10 +4,10 @@ import { esc, formatoPrecio, COMODIDADES, ESTADOS } from "./shared.js";
 const FB = "https://www.gstatic.com/firebasejs/10.12.2";
 const { initializeApp } = await import(`${FB}/firebase-app.js`);
 const {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } = await import(`${FB}/firebase-auth.js`);
 const {
-  getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, getDocs, getDoc, serverTimestamp
+  getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, serverTimestamp
 } = await import(`${FB}/firebase-firestore.js`);
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -111,19 +111,6 @@ $("#togglePw").addEventListener("click", () => {
   i.type = i.type === "password" ? "text" : "password";
 });
 
-$("#forgotBtn").addEventListener("click", async () => {
-  const user = $("#lEmail").value.trim();
-  if (!user) return loginError("Escribí tu usuario arriba y volvé a tocar 'Olvidé mi contraseña'.");
-  const email = user.includes("@") ? user : user + "@labrava.com";
-  try {
-    await sendPasswordResetEmail(auth, email);
-    loginError("");
-    toast("Te enviamos un email para restablecer la contraseña.");
-  } catch (err) {
-    loginError(errorAuth(err));
-  }
-});
-
 $("#logoutBtn").addEventListener("click", () => signOut(auth));
 
 // ============================================================
@@ -131,15 +118,12 @@ $("#logoutBtn").addEventListener("click", () => signOut(auth));
 // ============================================================
 let cabanas = [];
 let unsub = null;
-let unsubAdmins = null;
 
 onAuthStateChanged(auth, user => {
   viewLogin.hidden = !!user;
   viewApp.hidden = !user;
   if (unsub) { unsub(); unsub = null; }
-  if (unsubAdmins) { unsubAdmins(); unsubAdmins = null; }
   if (!user) return;
-  escucharAdmins();
   $("#userEmail").textContent = user.email;
   $("#list").innerHTML = `<p class="loading">Cargando cabañas…</p>`;
   unsub = onSnapshot(col, snap => {
@@ -481,133 +465,5 @@ form.addEventListener("submit", async e => {
   } finally {
     btn.disabled = false;
     btn.textContent = "Guardar cabaña";
-  }
-});
-
-
-// ============================================================
-//  TABS
-// ============================================================
-const tabBtns = document.querySelectorAll("[data-tab]");
-const panels = { cabanas: $("#panelCabanas"), usuarios: $("#panelUsuarios") };
-
-tabBtns.forEach(btn => btn.addEventListener("click", () => {
-  tabBtns.forEach(b => b.classList.remove("tab--active"));
-  btn.classList.add("tab--active");
-  Object.values(panels).forEach(p => p.hidden = true);
-  panels[btn.dataset.tab].hidden = false;
-}));
-
-// ============================================================
-//  GESTIÓN DE USUARIOS (colección "admins")
-// ============================================================
-const adminsCol = collection(db, "admins");
-let admins = [];
-
-async function escucharAdmins() {
-  if (unsubAdmins) { unsubAdmins(); unsubAdmins = null; }
-
-  // Bootstrap: intentar auto-registrarse como admin.
-  // Si ya existe el doc, fallará silenciosamente (update denegado).
-  if (auth.currentUser) {
-    try {
-      await setDoc(doc(db, "admins", auth.currentUser.email), {
-        creadoPor: "bootstrap", creado: serverTimestamp()
-      });
-    } catch (e) {
-      // Esperado si el doc ya existe o el usuario ya es admin
-    }
-  }
-
-  unsubAdmins = onSnapshot(adminsCol, snap => {
-    admins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderUsuarios();
-  }, err => {
-    console.error(err);
-  });
-}
-
-function renderUsuarios() {
-  const currentEmail = auth.currentUser?.email;
-  $("#userListEmpty").hidden = admins.length > 0;
-  $("#userList").innerHTML = admins
-    .sort((a, b) => a.id.localeCompare(b.id))
-    .map(a => {
-      const nombre = a.id.replace("@labrava.com", "");
-      const esSelf = a.id === currentEmail;
-      return `
-      <div class="user-item">
-        <div class="user-item__info">
-          <span class="user-item__name">${esc(nombre)}${esSelf ? ` <span class="user-item__you">Vos</span>` : ""}</span>
-          <span class="user-item__email">${esc(a.id)}</span>
-        </div>
-        ${esSelf ? "" : `<button class="icon-btn icon-btn--danger" data-deluser="${esc(a.id)}" aria-label="Eliminar usuario">${icon("i-trash")}</button>`}
-      </div>`;
-    }).join("");
-}
-
-
-// Crear usuario
-function userError(msg) {
-  const el = $("#userError");
-  el.textContent = msg || "";
-  el.hidden = !msg;
-}
-
-$("#addUserBtn").addEventListener("click", async () => {
-  userError("");
-  const nombre = $("#nuevoUser").value.trim().toLowerCase();
-  const pass = $("#nuevoPass").value;
-
-  if (!nombre) { userError("Ingresá un nombre de usuario."); return; }
-  if (/[^a-z0-9._-]/.test(nombre)) { userError("Solo letras minúsculas, números, puntos y guiones."); return; }
-  if (!pass || pass.length < 6) { userError("La contraseña debe tener al menos 6 caracteres."); return; }
-
-  const email = nombre + "@labrava.com";
-  const btn = $("#addUserBtn");
-  btn.disabled = true;
-  btn.textContent = "Creando…";
-
-  try {
-    // Crear usuario en Auth usando una app secundaria para no cerrar la sesión actual
-    const secondaryApp = initializeApp(firebaseConfig, "secondary-" + Date.now());
-    const secondaryAuth = getAuth(secondaryApp);
-    await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-    await signOut(secondaryAuth);
-    // No necesitamos deleteApp, simplemente ignoramos la instancia secundaria
-
-    // Agregar a la colección admins
-    await setDoc(doc(db, "admins", email), { creadoPor: auth.currentUser.email, creado: serverTimestamp() });
-
-    toast(`Usuario "${nombre}" creado.`);
-    $("#nuevoUser").value = "";
-    $("#nuevoPass").value = "";
-  } catch (err) {
-    console.error(err);
-    const msgs = {
-      "auth/email-already-in-use": "Ya existe un usuario con ese nombre.",
-      "auth/weak-password": "La contraseña es muy débil (mínimo 6 caracteres).",
-      "auth/invalid-email": "El nombre de usuario no es válido.",
-    };
-    userError(msgs[err.code] || "No se pudo crear el usuario. Intentá de nuevo.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = " Crear usuario";
-  }
-});
-
-// Eliminar usuario (solo de la colección admins, no de Auth)
-$("#userList").addEventListener("click", async e => {
-  const btn = e.target.closest("[data-deluser]");
-  if (!btn) return;
-  const email = btn.dataset.deluser;
-  const nombre = email.replace("@labrava.com", "");
-  if (!confirm(`¿Eliminar el acceso de "${nombre}"? Ya no podrá ingresar al panel.`)) return;
-  try {
-    await deleteDoc(doc(db, "admins", email));
-    toast(`Acceso de "${nombre}" eliminado.`);
-  } catch (err) {
-    console.error(err);
-    toast("No se pudo eliminar el usuario.", true);
   }
 });
