@@ -146,6 +146,10 @@ function detalleHTML(c) {
     ${fotos.length ? `
       <div class="gallery">
         <img class="gallery__img" id="gImg" src="${esc(fotos[0])}" alt="${esc(c.nombre)}">
+        <button class="gallery__zoom" data-zoom aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          <span>Ampliar vista</span>
+        </button>
         ${fotos.length > 1 ? `
           <button class="gallery__nav gallery__nav--prev" data-g="-1" aria-label="Foto anterior">${icon("i-left")}</button>
           <button class="gallery__nav gallery__nav--next" data-g="1" aria-label="Foto siguiente">${icon("i-right")}</button>
@@ -185,6 +189,25 @@ async function abrir(id) {
   modal.hidden = false;
   document.body.style.overflow = "hidden";
   $(".modal__close", modal).focus();
+  const img = $("#gImg");
+  if (img) img.addEventListener("load", ajustarAmpliada);
+}
+
+// Ampliar vista: la galería crece hacia abajo hasta mostrar la foto completa
+function ajustarAmpliada() {
+  const g = $(".gallery", modalBody), img = $("#gImg");
+  if (!g || !img || !g.classList.contains("is-expanded") || !img.naturalWidth) return;
+  const alto = g.clientWidth * img.naturalHeight / img.naturalWidth;
+  g.style.height = Math.min(alto, window.innerHeight * 0.85) + "px";
+}
+
+function toggleAmpliar(btn) {
+  const g = btn.closest(".gallery");
+  const on = g.classList.toggle("is-expanded");
+  btn.setAttribute("aria-pressed", on);
+  $("span", btn).textContent = on ? "Reducir vista" : "Ampliar vista";
+  if (on) ajustarAmpliada();
+  else g.style.height = "";
 }
 
 function cerrar() {
@@ -208,6 +231,8 @@ grid.addEventListener("click", e => {
 });
 modal.addEventListener("click", e => {
   if (e.target.closest("[data-close]")) return cerrar();
+  const z = e.target.closest("[data-zoom]");
+  if (z) return toggleAmpliar(z);
   const g = e.target.closest("[data-g]");
   if (g) return irA(galeria.i + Number(g.dataset.g));
   const t = e.target.closest("[data-t]");
