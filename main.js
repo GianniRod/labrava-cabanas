@@ -197,10 +197,21 @@ async function abrir(id) {
 // ---------- Reservar: calendario y después el botón de enviar ----------
 const reserva = $("#reserva");
 
+// Sin id (botones generales de WhatsApp) arranca con la primera cabaña de la lista
 function abrirReserva(id) {
-  const c = cabanas.find(x => x.id === id);
+  const c = cabanas.find(x => x.id === id) || cabanas[0];
   if (!c) return;
-  $("#rTitle").textContent = c.nombre;
+  $("#rCabana").innerHTML = cabanas.map(x =>
+    `<option value="${esc(x.id)}" ${x === c ? "selected" : ""}>${esc(x.nombre)}${(x.estado || "disponible") === "disponible" ? "" : ` (${esc(ESTADOS[x.estado] || x.estado)})`}</option>`).join("");
+  mostrarCabanaReserva(c);
+  reserva.hidden = false;
+  document.body.style.overflow = "hidden";
+  $(".modal__close", reserva).focus();
+}
+
+function mostrarCabanaReserva(c) {
+  const p = formatoPrecio(c.precio);
+  $("#rPrecio").innerHTML = p ? `${esc(p.monto)} <small>/ ${esc(p.periodo)}</small>` : `Consultar precio`;
   $("#rSinFechas").href = linkWhatsApp(mensajeCabana(c));
   const enviar = $("#rEnviar");
   const listo = sel => {
@@ -214,9 +225,30 @@ function abrirReserva(id) {
   viejo.replaceWith(el);
   crearCalendario(el, { ocupado: c.ocupado || [], checkIn: c.checkIn, checkOut: c.checkOut, onChange: listo });
   listo({});
-  reserva.hidden = false;
-  document.body.style.overflow = "hidden";
-  $(".modal__close", reserva).focus();
+}
+
+$("#rCabana").addEventListener("change", e => {
+  const c = cabanas.find(x => x.id === e.target.value);
+  if (c) mostrarCabanaReserva(c);
+});
+
+// Los botones generales de WhatsApp también abren el calendario (si ya cargaron las cabañas)
+document.querySelectorAll("[data-wa]").forEach(a => a.addEventListener("click", e => {
+  if (!cabanas.length) return;
+  e.preventDefault();
+  nav.classList.remove("is-open");
+  abrirReserva(null);
+}));
+
+function precioTextoMsg(c, n) {
+  const p = formatoPrecio(c.precio);
+  if (!p) return "Precio: a consultar";
+  let t = `Precio publicado: ${p.monto} por ${p.periodo}`;
+  if (n && c.precio.periodo === "noche") {
+    const total = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(Number(c.precio.monto) * n);
+    t += ` (total estimado ${c.precio.moneda === "USD" ? "USD" : "$"} ${total})`;
+  }
+  return t;
 }
 
 function cerrarReserva() {
@@ -233,13 +265,15 @@ reserva.addEventListener("click", e => {
 function mensajeReserva(c, { desde, hasta }) {
   const n = noches(desde, hasta);
   return [
-    `¡Hola! Quiero reservar la cabaña "${c.nombre}" en Laguna La Brava.`,
+    `¡Hola! Quiero reservar en Laguna La Brava.`,
     "",
+    `Cabaña: ${c.nombre}`,
+    precioTextoMsg(c, n),
     `Ingreso: ${fechaTexto(desde, true)}${c.checkIn ? ` (${c.checkIn} hs)` : ""}`,
     `Salida: ${fechaTexto(hasta, true)}${c.checkOut ? ` (${c.checkOut} hs)` : ""}`,
-    `Total: ${n} noche${n === 1 ? "" : "s"}`,
+    `Estadía: ${n} noche${n === 1 ? "" : "s"}`,
     "",
-    "¿Está disponible para esas fechas y cuál sería el valor?"
+    "¿Está disponible para esas fechas?"
   ].join("\n");
 }
 

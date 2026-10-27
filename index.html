@@ -247,9 +247,13 @@
   <article class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="rTitle">
     <button class="modal__close" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
     <div class="reserva">
-      <p class="eyebrow">Reservar por WhatsApp</p>
-      <h2 id="rTitle"></h2>
-      <p class="reserva__sub">Elegí tus fechas y te mandamos el mensaje listo con los días.</p>
+      <h2 id="rTitle">Reservar por WhatsApp</h2>
+      <label class="reserva__cab">
+        <span>Cabaña</span>
+        <select id="rCabana"></select>
+      </label>
+      <p class="reserva__precio" id="rPrecio"></p>
+      <p class="reserva__sub">Elegí tus fechas y te armamos el mensaje con la cabaña, el precio y los días.</p>
       <div id="rCal"></div>
       <a class="btn btn--wa" id="rEnviar" href="#" target="_blank" rel="noopener" hidden><svg class="ico"><use href="#i-wa"/></svg> Enviar por WhatsApp</a>
       <a class="reserva__alt" id="rSinFechas" href="#" target="_blank" rel="noopener">Todavía no sé las fechas, quiero consultar</a>
