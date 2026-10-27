@@ -150,6 +150,20 @@ body.admin { background: #f3f1ec; }
 .check { display: flex; align-items: center; gap: 8px; font-size: .9rem; cursor: pointer; padding: 6px 0; }
 .check input { width: 17px; height: 17px; accent-color: var(--bosque); }
 
+/* ---------- Disponibilidad ---------- */
+.drawer__sub { margin: 2px 0 0; font-size: .88rem; }
+#adminCal { background: #fff; border: 1px solid var(--linea); border-radius: 14px; padding: 16px; }
+.cal-add { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin: 16px 0 10px; }
+.cal-add .field { flex: 1 1 260px; margin-bottom: 0; }
+.res-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.res-item { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--linea); border-radius: 12px; padding: 10px 12px 10px 16px; }
+.res-item__main { flex: 1; min-width: 0; }
+.res-item__main strong { display: block; font-size: .95rem; color: var(--bosque); text-transform: capitalize; }
+.res-item__main span { font-size: .84rem; color: var(--muted); }
+.res-item__nota { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.res-item.is-now { border-color: #e8cdb8; background: #fdf7f2; }
+.res-empty { font-size: .9rem; color: var(--muted); margin: 0 0 18px; }
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 200;
