@@ -241,6 +241,22 @@
   </article>
 </div>
 
+<!-- Reservar: calendario + enviar por WhatsApp -->
+<div class="modal modal--reserva" id="reserva" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <article class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="rTitle">
+    <button class="modal__close" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    <div class="reserva">
+      <p class="eyebrow">Reservar por WhatsApp</p>
+      <h2 id="rTitle"></h2>
+      <p class="reserva__sub">Elegí tus fechas y te mandamos el mensaje listo con los días.</p>
+      <div id="rCal"></div>
+      <a class="btn btn--wa" id="rEnviar" href="#" target="_blank" rel="noopener" hidden><svg class="ico"><use href="#i-wa"/></svg> Enviar por WhatsApp</a>
+      <a class="reserva__alt" id="rSinFechas" href="#" target="_blank" rel="noopener">Todavía no sé las fechas, quiero consultar</a>
+    </div>
+  </article>
+</div>
+
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
