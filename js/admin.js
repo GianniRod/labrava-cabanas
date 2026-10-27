@@ -1,5 +1,6 @@
 import { firebaseConfig, firebaseSinConfigurar, COLECCION } from "./firebase-config.js";
 import { esc, formatoPrecio, COMODIDADES, ESTADOS } from "./shared.js";
+import { crearCalendario, fechaTexto, noches, rangoLibre, hoyIso } from "./calendario.js";
 
 const FB = "https://www.gstatic.com/firebasejs/10.12.2";
 const { initializeApp } = await import(`${FB}/firebase-app.js`);
@@ -7,7 +8,7 @@ const {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } = await import(`${FB}/firebase-auth.js`);
 const {
-  getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, serverTimestamp
+  getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, writeBatch, serverTimestamp
 } = await import(`${FB}/firebase-firestore.js`);
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -158,11 +159,13 @@ function renderLista() {
   $("#listEmpty").hidden = cabanas.length > 0;
   $("#list").innerHTML = lista.length || !cabanas.length ? lista.map(c => {
     const estado = c.estado || "disponible";
+    const proximas = (c.ocupado || []).filter(r => r.hasta > hoyIso()).length;
     const meta = [
       c.capacidad && `${c.capacidad} huéspedes`,
       c.dormitorios && `${c.dormitorios} dorm.`,
       c.banos && `${c.banos} baño${c.banos == 1 ? "" : "s"}`,
-      `${(c.fotos || []).length} fotos`
+      `${(c.fotos || []).length} fotos`,
+      proximas && `${proximas} ocupación${proximas === 1 ? "" : "es"} próxima${proximas === 1 ? "" : "s"}`
     ].filter(Boolean);
     return `
     <div class="row-item">
@@ -179,6 +182,7 @@ function renderLista() {
           </select>
         </div>
         <div class="row-item__actions">
+          <button class="icon-btn" data-cal="${esc(c.id)}" aria-label="Disponibilidad" title="Disponibilidad">${icon("i-calendar")}</button>
           <button class="icon-btn" data-edit="${esc(c.id)}" aria-label="Editar">${icon("i-edit")}</button>
           <button class="icon-btn icon-btn--danger" data-del="${esc(c.id)}" aria-label="Eliminar">${icon("i-trash")}</button>
         </div>
@@ -209,6 +213,8 @@ $("#list").addEventListener("change", async e => {
 });
 
 $("#list").addEventListener("click", async e => {
+  const cal = e.target.closest("[data-cal]");
+  if (cal) return abrirDisponibilidad(cabanas.find(c => c.id === cal.dataset.cal));
   const ed = e.target.closest("[data-edit]");
   if (ed) return abrirEditor(cabanas.find(c => c.id === ed.dataset.edit));
   const del = e.target.closest("[data-del]");
@@ -465,5 +471,132 @@ form.addEventListener("submit", async e => {
   } finally {
     btn.disabled = false;
     btn.textContent = "Guardar cabaña";
+  }
+});
+
+// ============================================================
+//  DISPONIBILIDAD
+// ============================================================
+// La cabaña guarda "ocupado" (solo rangos, lo lee la web). Las notas privadas
+// de cada ocupación van aparte en "reservas/<id de la cabaña>" (solo admin).
+const calDrawer = $("#calDrawer");
+const reservasCol = collection(db, "reservas");
+let calCabana = null;
+let reservas = [];
+let calendario = null;
+
+const rangoTexto = r => `${fechaTexto(r.desde)} → ${fechaTexto(r.hasta)}`;
+const reservaDe = d => reservas.find(r => r.desde <= d && d < r.hasta);
+
+async function abrirDisponibilidad(c) {
+  if (!c) return;
+  calCabana = c;
+  reservas = (c.ocupado || []).map(r => ({ desde: r.desde, hasta: r.hasta, nota: "" }));
+  $("#calSub").textContent = c.nombre;
+  const horario = [c.checkIn && `Check-in desde las ${c.checkIn}`, c.checkOut && `check-out hasta las ${c.checkOut}`].filter(Boolean).join(" · ");
+  $("#calHorario").textContent = horario;
+  $("#calHorario").hidden = !horario;
+  $("#calNota").value = "";
+  $("#calAdd").hidden = true;
+
+  // Nodo nuevo para no acumular listeners de calendarios anteriores
+  const viejo = $("#adminCal");
+  const el = viejo.cloneNode(false);
+  viejo.replaceWith(el);
+  calendario = crearCalendario(el, {
+    ocupado: reservas, meses: 2, checkIn: c.checkIn, checkOut: c.checkOut, leyendaSel: "Selección",
+    etiqueta: d => { const r = reservaDe(d); return r ? `Ocupado: ${rangoTexto(r)}${r.nota ? " · " + r.nota : ""}` : ""; },
+    onChange: sel => { $("#calAdd").hidden = !(sel.desde && sel.hasta); }
+  });
+  renderReservas();
+  calDrawer.hidden = false;
+  document.body.style.overflow = "hidden";
+  $(".drawer__body", calDrawer).scrollTop = 0;
+
+  try {
+    const notas = (await getDoc(doc(reservasCol, c.id))).data()?.items || [];
+    if (calCabana !== c) return;
+    reservas.forEach(r => (r.nota = notas.find(n => n.desde === r.desde && n.hasta === r.hasta)?.nota || ""));
+    renderReservas();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function cerrarDisponibilidad() {
+  calDrawer.hidden = true;
+  calCabana = null;
+  document.body.style.overflow = "";
+}
+calDrawer.addEventListener("click", e => { if (e.target.closest("[data-close]")) cerrarDisponibilidad(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !calDrawer.hidden) cerrarDisponibilidad(); });
+
+function renderReservas() {
+  const hoy = hoyIso();
+  const proximas = reservas.filter(r => r.hasta > hoy);
+  $("#resList").innerHTML = proximas.length ? proximas.map(r => {
+    const n = noches(r.desde, r.hasta);
+    return `
+    <div class="res-item ${r.desde <= hoy ? "is-now" : ""}">
+      <div class="res-item__main">
+        <strong>${esc(rangoTexto(r))}</strong>
+        <span>${n} noche${n === 1 ? "" : "s"}${r.desde <= hoy ? " · en curso" : ""}</span>
+        ${r.nota ? `<span class="res-item__nota">${esc(r.nota)}</span>` : ""}
+      </div>
+      <button type="button" class="icon-btn icon-btn--danger" data-quitar="${esc(r.desde)}" aria-label="Liberar fechas" title="Liberar fechas">${icon("i-trash")}</button>
+    </div>`;
+  }).join("") : `<p class="res-empty">No hay fechas ocupadas. La cabaña figura libre en todo el calendario.</p>`;
+}
+
+async function guardarReservas(nuevas) {
+  nuevas.sort((a, b) => a.desde.localeCompare(b.desde));
+  const batch = writeBatch(db);
+  batch.update(doc(db, COLECCION, calCabana.id), {
+    ocupado: nuevas.map(({ desde, hasta }) => ({ desde, hasta })),
+    actualizado: serverTimestamp()
+  });
+  batch.set(doc(reservasCol, calCabana.id), {
+    items: nuevas.filter(r => r.nota).map(({ desde, hasta, nota }) => ({ desde, hasta, nota }))
+  });
+  await batch.commit();
+  reservas = nuevas;
+  calendario.setOcupado(reservas);
+  renderReservas();
+}
+
+const errorReservas = err => toast(err.code === "permission-denied"
+  ? "No se pudo guardar: falta actualizar las reglas de Firestore (ver README)."
+  : "No se pudieron guardar las fechas. Intentá de nuevo.", true);
+
+$("#calGuardar").addEventListener("click", async () => {
+  const { desde, hasta } = calendario.seleccion;
+  if (!desde || !hasta) return;
+  if (!rangoLibre(reservas, desde, hasta)) return toast("Esas fechas se superponen con otra ocupación.", true);
+  const btn = $("#calGuardar");
+  btn.disabled = true;
+  try {
+    await guardarReservas([...reservas, { desde, hasta, nota: $("#calNota").value.trim() }]);
+    $("#calNota").value = "";
+    calendario.limpiar();
+    toast("Fechas marcadas como ocupadas.");
+  } catch (err) {
+    console.error(err);
+    errorReservas(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$("#resList").addEventListener("click", async e => {
+  const b = e.target.closest("[data-quitar]");
+  if (!b) return;
+  const r = reservas.find(x => x.desde === b.dataset.quitar);
+  if (!r || !confirm(`¿Liberar ${rangoTexto(r)}? Esas fechas vuelven a figurar disponibles en la web.`)) return;
+  try {
+    await guardarReservas(reservas.filter(x => x !== r));
+    toast("Fechas liberadas.");
+  } catch (err) {
+    console.error(err);
+    errorReservas(err);
   }
 });

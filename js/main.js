@@ -1,5 +1,6 @@
 import { firebaseConfig, firebaseSinConfigurar, COLECCION, WHATSAPP_DISPLAY } from "./firebase-config.js";
 import { esc, formatoPrecio, linkWhatsApp, mensajeCabana, ESTADOS } from "./shared.js";
+import { crearCalendario, fechaTexto, noches, iso } from "./calendario.js";
 
 const FB = "https://www.gstatic.com/firebasejs/10.12.2";
 
@@ -173,8 +174,10 @@ function detalleHTML(c) {
           ? `<div class="price"><small>Valor</small><strong>${esc(p.monto)} <span>/ ${esc(p.periodo)}</span></strong></div>`
           : `<div class="price price--consultar"><small>Valor</small><strong>Consultar precio</strong></div>`}
         <div class="booking__state booking__state--${esc(estado)}">${esc(ESTADOS[estado] || estado)}</div>
-        <a class="btn btn--wa" href="${linkWhatsApp(mensajeCabana(c))}" target="_blank" rel="noopener">${icon("i-wa")} Consultar por WhatsApp</a>
-        <p class="booking__note">Sin reserva online · Trato directo con el dueño</p>
+        <p class="booking__label">Elegí tus fechas</p>
+        <div id="cal"></div>
+        <a class="btn btn--wa" id="waReserva" href="${linkWhatsApp(mensajeCabana(c))}" target="_blank" rel="noopener">${icon("i-wa")} <span>Consultar por WhatsApp</span></a>
+        <p class="booking__note">La reserva se confirma por WhatsApp · Trato directo con el dueño</p>
         ${info.length ? `<ul class="booking__list">${info.map(([k, v]) => `<li><span>${k}</span><strong>${esc(v)}</strong></li>`).join("")}</ul>` : ""}
       </aside>
     </div>`;
@@ -191,6 +194,29 @@ async function abrir(id) {
   $(".modal__close", modal).focus();
   const img = $("#gImg");
   if (img) img.addEventListener("load", ajustarAmpliada);
+
+  const wa = $("#waReserva");
+  crearCalendario($("#cal"), {
+    ocupado: c.ocupado || [], checkIn: c.checkIn, checkOut: c.checkOut,
+    onChange: sel => {
+      const completa = sel.desde && sel.hasta;
+      wa.href = linkWhatsApp(completa ? mensajeReserva(c, sel) : mensajeCabana(c));
+      $("span", wa).textContent = completa ? "Reservar por WhatsApp" : "Consultar por WhatsApp";
+    }
+  });
+}
+
+function mensajeReserva(c, { desde, hasta }) {
+  const n = noches(desde, hasta);
+  return [
+    `¡Hola! Quiero reservar la cabaña "${c.nombre}" en Laguna La Brava.`,
+    "",
+    `Ingreso: ${fechaTexto(desde, true)}${c.checkIn ? ` (${c.checkIn} hs)` : ""}`,
+    `Salida: ${fechaTexto(hasta, true)}${c.checkOut ? ` (${c.checkOut} hs)` : ""}`,
+    `Total: ${n} noche${n === 1 ? "" : "s"}`,
+    "",
+    "¿Está disponible para esas fechas y cuál sería el valor?"
+  ].join("\n");
 }
 
 // Ampliar vista: la galería crece hacia abajo hasta mostrar la foto completa
@@ -246,6 +272,10 @@ document.addEventListener("keydown", e => {
 });
 
 // ---------- Datos de ejemplo (solo si Firebase no está configurado) ----------
+function rangoDemo(a, b) {
+  const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return iso(x); };
+  return { desde: d(a), hasta: d(b) };
+}
 const DEMO = [
   {
     id: "demo-1", nombre: "Cabaña El Mirador", destacada: true, estado: "disponible", orden: 1,
@@ -253,7 +283,7 @@ const DEMO = [
     descripcion: "Cabaña de madera y piedra con vista directa a la laguna. Living comedor con hogar a leña, cocina equipada y galería con parrilla para disfrutar los atardeceres.\n\nIdeal para parejas o familias que buscan tranquilidad.",
     capacidad: 4, dormitorios: 2, banos: 1, camas: "1 matrimonial, 2 individuales", superficie: 65,
     distanciaLaguna: "100 m", checkIn: "14:00", checkOut: "10:00", estadiaMinima: "1 mes",
-    mascotas: true, fumar: false, fotos: [],
+    mascotas: true, fumar: false, fotos: [], ocupado: [rangoDemo(5, 9), rangoDemo(16, 23)],
     comodidades: ["Wi-Fi", "Parrilla", "Hogar a leña", "Cocina equipada", "Vista a la laguna", "Estacionamiento", "Ropa de cama"],
     precio: { modo: "precio", monto: 850000, moneda: "ARS", periodo: "mes" }
   },
