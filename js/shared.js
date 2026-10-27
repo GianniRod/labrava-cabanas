@@ -35,5 +35,7 @@ export function linkWhatsApp(mensaje) {
 }
 
 export function mensajeCabana(c) {
-  return `¡Hola! Quiero consultar por la cabaña "${c.nombre}" en Laguna La Brava. ¿Está disponible y cuál es el valor?`;
+  const p = formatoPrecio(c.precio);
+  const precio = p ? ` (publicada a ${p.monto} por ${p.periodo})` : "";
+  return `¡Hola! Quiero consultar por la cabaña "${c.nombre}"${precio} en Laguna La Brava. ¿Qué fechas tienen disponibles?`;
 }
