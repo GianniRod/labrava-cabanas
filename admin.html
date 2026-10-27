@@ -26,7 +26,8 @@
   <symbol id="i-eye" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="m20 20-4.2-4.2"/></symbol>
-  <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 11 12 4l8 7v9h-5v-6H9v6H4v-9Z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-home"viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 11 12 4l8 7v9h-5v-6H9v6H4v-9Z"/></symbol>
 </svg>
 
 <!-- ============ LOGIN ============ -->
@@ -213,6 +214,38 @@
       <button type="submit" class="btn btn--dark" id="saveBtn">Guardar cabaña</button>
     </footer>
   </form>
+</div>
+
+<!-- ============ DISPONIBILIDAD ============ -->
+<div class="drawer" id="calDrawer" hidden>
+  <div class="drawer__backdrop" data-close></div>
+  <div class="drawer__panel" role="dialog" aria-modal="true" aria-labelledby="calTitle">
+    <header class="drawer__head">
+      <div>
+        <h2 id="calTitle">Disponibilidad</h2>
+        <p class="muted drawer__sub" id="calSub"></p>
+      </div>
+      <button type="button" class="icon-btn" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    </header>
+
+    <div class="drawer__body">
+      <fieldset class="fs">
+        <legend>Calendario</legend>
+        <p class="hint">Tocá el día de ingreso y después el de salida para marcar una estadía. El día de salida queda libre para que entre otro huésped. Los días ocupados se ven en la web y no se pueden elegir.</p>
+        <p class="hint" id="calHorario" hidden></p>
+        <div id="adminCal"></div>
+        <div class="cal-add" id="calAdd" hidden>
+          <label class="field"><span>Nota <em>(privada, no se ve en la web)</em></span><input id="calNota" maxlength="120" placeholder="Ej: Familia Pérez · seña pagada"></label>
+          <button type="button" class="btn btn--dark" id="calGuardar"><svg class="ico"><use href="#i-plus"/></svg> Marcar como ocupado</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="fs">
+        <legend>Próximas ocupaciones</legend>
+        <div class="res-list" id="resList"></div>
+      </fieldset>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast" role="status" hidden></div>
